@@ -39,7 +39,7 @@ def classify_tags(tags):
     return matched or ["other"]
 
 
-def get_terrain_type(lat, lon, radius=1000):
+def get_terrain_type(lat, lon, radius=5000):
 
     query = f"""
     [out:json][timeout:90];
