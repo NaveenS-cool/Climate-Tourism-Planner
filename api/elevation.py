@@ -1,5 +1,5 @@
 import requests
-from locator import get_coords
+from .locator import get_coords
 
 
 def get_elevation(lat,lon):

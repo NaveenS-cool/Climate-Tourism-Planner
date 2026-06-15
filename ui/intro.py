@@ -4,23 +4,26 @@ import streamlit as st
 def show_intro():
     """Renders the introductory landing page with animated background and destination input."""
 
+    
     # CUSTOM CSS — Earthy & Green animated background
+    
     #  - .earth-bg: full-screen gradient that slowly shifts hues
     #  - .leaf: procedurally-placed leaf emblems that drift upward
     #  - .orb: soft glowing circles in warm earth tones
     #  - div[data-testid="column"]:nth-of-type(2): glass-morphism card on middle col
     #  - .stTextInput / .stButton overrides for premium look
+    
     st.markdown(
         """
         <style>
+        /* ---------- RESET / BASE ---------- */
         #root > div:first-child {
             background: transparent !important;
         }
         .stApp {
             background: transparent !important;
         }
-
-        /* Streamlit header — hide so it doesn't offset 100vh */
+        /* Streamlit header (hamburger menu bar) — hide so it doesn't offset 100vh */
         [data-testid="stHeader"] {
             display: none;
         }
@@ -43,7 +46,7 @@ def show_intro():
             width: 100% !important;
         }
 
-        /* ANIMATED BACKGROUND */
+        /* ---------- ANIMATED BACKGROUND ---------- */
         .earth-bg {
             position: fixed;
             top: 0;
@@ -52,6 +55,8 @@ def show_intro():
             height: 100vh;
             z-index: 0;
             overflow: hidden;
+
+            /* Shifting gradient between earthy greens and warm browns */
             background: linear-gradient(
                 135deg,
                 #1b4332 0%,
@@ -72,7 +77,7 @@ def show_intro():
             100% { background-position: 0% 50%; }
         }
 
-        /* FLOATING LEAVES */
+        /* ---------- FLOATING LEAVES ---------- */
         .leaf {
             position: absolute;
             width: 28px;
@@ -84,6 +89,7 @@ def show_intro():
             pointer-events: none;
         }
 
+        /* Each leaf gets its position, size, and timing via inline styles */
         @keyframes leafFloat {
             0%   { transform: translateY(110vh) rotate(0deg) scale(1); opacity: 0; }
             10%  { opacity: 0.18; }
@@ -91,7 +97,7 @@ def show_intro():
             100% { transform: translateY(-10vh) rotate(720deg) scale(0.6); opacity: 0; }
         }
 
-        /* GLOWING EARTH ORBS */
+        /* ---------- GLOWING EARTH ORBS ---------- */
         .orb {
             position: absolute;
             border-radius: 50%;
@@ -105,7 +111,7 @@ def show_intro():
             100% { transform: scale(1.3); opacity: 0.45; }
         }
 
-        /* GLASS CARD — applied to the middle column */
+        /* ---------- GLASS CARD — applied to the middle column ---------- */
         div[data-testid="column"]:nth-of-type(2) > div {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(16px) saturate(150%);
@@ -122,7 +128,7 @@ def show_intro():
             box-shadow: 0 28px 96px rgba(0, 0, 0, 0.5);
         }
 
-        /* HEADLINE */
+        /* ---------- HEADLINE ---------- */
         .headline {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             font-weight: 700;
@@ -145,36 +151,36 @@ def show_intro():
             margin-bottom: 2.2rem;
         }
 
-        /* STREAMLIT OVERRIDES (Text Input) */
+        /* ---------- STREAMLIT OVERRIDES (Text Input) ---------- */
         div[data-testid="stTextInput"] {
             margin-bottom: 1.2rem;
         }
 
         div[data-testid="stTextInput"] > div {
-            background: rgba(255, 255, 255, 0.85) !important;
-            border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+            background: rgba(255, 255, 255, 0.10) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.20) !important;
             border-radius: 14px !important;
             transition: all 0.3s ease !important;
         }
 
         div[data-testid="stTextInput"] > div:focus-within {
-            border-color: #2d6a4f !important;
-            box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.25) !important;
-            background: #fff !important;
+            border-color: #95d5b2 !important;
+            box-shadow: 0 0 0 3px rgba(149, 213, 178, 0.25) !important;
+            background: rgba(255, 255, 255, 0.16) !important;
         }
 
         div[data-testid="stTextInput"] input {
-            color: #111827 !important;
+            color: #fff !important;
             font-size: 1.05rem !important;
             padding: 0.8rem 1rem !important;
-            caret-color: #40916c !important;
+            caret-color: #95d5b2 !important;
         }
 
         div[data-testid="stTextInput"] input::placeholder {
-            color: rgba(0, 0, 0, 0.45) !important;
+            color: rgba(255, 255, 255, 0.45) !important;
         }
 
-        /* STREAMLIT OVERRIDES (Button) */
+        /* ---------- STREAMLIT OVERRIDES (Button) ---------- */
         div[data-testid="stButton"] {
             display: flex;
             justify-content: center;
@@ -205,7 +211,7 @@ def show_intro():
             box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3) !important;
         }
 
-        /* RESPONSIVE */
+        /* ---------- RESPONSIVE ---------- */
         @media (max-width: 600px) {
             .headline   { font-size: 1.8rem; }
         }
@@ -214,9 +220,12 @@ def show_intro():
         unsafe_allow_html=True,
     )
 
+    
     # ANIMATED BACKGROUND MARKUP
+    
     #  - 5 leaves with varying sizes, speeds, and horizontal positions
     #  - 3 orbs in warm earth tones (amber, terracotta, olive)
+    
     leaves = [
         {"left": "8%",  "size": "24px",  "dur": "18s",  "delay": "0s"},
         {"left": "22%", "size": "32px",  "dur": "22s",  "delay": "3s"},
@@ -246,9 +255,12 @@ def show_intro():
         unsafe_allow_html=True,
     )
 
+    
     # MAIN CONTENT — centered in a narrow column using Streamlit columns
+    
     # Columns [left_gutter, middle_content, right_gutter]
     # Ratio 1:1.5:1 keeps the card narrow on wide screens.
+    
     _, col_content, _ = st.columns([1, 1.5, 1])
 
     with col_content:
@@ -261,6 +273,7 @@ def show_intro():
             unsafe_allow_html=True,
         )
 
+        # --- Destination input ---
         destination = st.text_input(
             label="Destination",
             placeholder="e.g. Munnar, Kerala",
@@ -268,9 +281,12 @@ def show_intro():
             key="intro_dest",
         )
 
+        # --- Submit button ---
         submitted = st.button("🌿  Start Planning", type="primary", use_container_width=False)
 
+    
     # SESSION-STATE ROUTING LOGIC
+    
     if submitted:
         if destination.strip():
             st.session_state["destination"] = destination.strip()

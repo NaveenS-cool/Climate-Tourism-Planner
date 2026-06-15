@@ -1,6 +1,7 @@
+import time
 import requests
 from collections import defaultdict
-from locator import get_coords
+from .locator import get_coords
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
@@ -27,6 +28,7 @@ PLACE_CATEGORIES = {
     "religious":    {"amenity": ["place_of_worship"]},
 }
 
+
 def classify_tags(tags):
     matched = []
     for category, tag_map in PLACE_CATEGORIES.items():
@@ -37,10 +39,10 @@ def classify_tags(tags):
     return matched or ["other"]
 
 
-def get_terrain_type(lat,lon, radius=1000):
+def get_terrain_type(lat, lon, radius=1000):
 
     query = f"""
-    [out:json][timeout:25];
+    [out:json][timeout:90];
     (
       node["natural"](around:{radius},{lat},{lon});
       node["waterway"~"river|stream|waterfall"](around:{radius},{lat},{lon});
@@ -63,9 +65,22 @@ def get_terrain_type(lat,lon, radius=1000):
         "Content-Type": "application/x-www-form-urlencoded",
     }
 
-    response = requests.post(OVERPASS_URL, data={"data": query}, headers=headers)
-    response.raise_for_status()
-    data = response.json()
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(
+                OVERPASS_URL, data={"data": query}, headers=headers, timeout=95
+            )
+            response.raise_for_status()
+            data = response.json()
+            break
+        except requests.exceptions.RequestException as e:
+            print(f"Overpass API attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(2 ** (attempt + 1))
+            else:
+                print("All Overpass API retries exhausted. Returning fallback.")
+                return {"coords": (lat, lon), "primary": "unknown", "all_types": [], "places": []}
 
     type_counts = defaultdict(int)
     places = []
@@ -74,7 +89,6 @@ def get_terrain_type(lat,lon, radius=1000):
         tags = el.get("tags", {})
         name = tags.get("name", "Unnamed")
 
-        # get coords
         if "center" in el:
             el_lat, el_lon = el["center"]["lat"], el["center"]["lon"]
         else:
@@ -102,11 +116,12 @@ def get_terrain_type(lat,lon, radius=1000):
         "places": places,
     }
 
+
 location = "Coorg, Karnataka"
 
-lat, long =  get_coords(location) 
+lat, long = get_coords(location)
 
-result = get_terrain_type(lat,long)
+result = get_terrain_type(lat, long)
 
-print(f"Primary terrain : {result['primary']}")  # We will use the primary terrain during analysis
+print(f"Primary terrain : {result['primary']}")
 print(f"All types found : {result['all_types']}")
