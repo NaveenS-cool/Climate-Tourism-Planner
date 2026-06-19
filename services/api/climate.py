@@ -1,6 +1,6 @@
-
 import requests
-from  .locator import get_coords
+import pandas as pd
+from datetime import date, timedelta
 
 def get_climate(lat, long):
 
@@ -27,4 +27,52 @@ def get_climate(lat, long):
     data = requests.get(url, params=params, headers={"User-Agent": "ClimateTourismPlanner"}).json()
 
     return data["daily"]
+
+def hist_climate(lat,long):
+
+    today = date.today()
+    results = []
+
+    for year_offset in range(1,6):
+
+        target_year = today.year - year_offset
+        center_date = date(target_year,today.month,today.day)
+        start_date = center_date - timedelta(days=7)
+        end_date = center_date + timedelta(days=7)
+
+        url = "https://archive-api.open-meteo.com/v1/archive"
+        params = {
+            "latitude": lat,
+            "longitude": long,
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "end_date": end_date.strftime("%Y-%m-%d"),
+            "daily": ["temperature_2m_mean","relative_humidity_2m_mean", "precipitation_sum"],
+            "timezone": "Asia/Kolkata"
+        }
+        resp = requests.get(url, params=params, headers={"User-Agent": "ClimateTourismPlanner"})
+        data = resp.json()["daily"]
+
+        for i in range(len(data["time"])):
+            results.append({
+                "date": data["time"][i],
+                "temp_mean": data["temperature_2m_mean"][i],
+                "rh_mean": data["relative_humidity_2m_mean"][i],
+                "precipitation": data["precipitation_sum"][i],
+        })
+    
+    df = pd.DataFrame(results)
+
+    hist_data = {
+        "temp_mean" : float(df["temp_mean"].mean()),
+        "temp_std" : float(df["temp_mean"].std()),
+
+        "rh_mean" : float(df["rh_mean"].mean()),
+        "rh_std" : float(df["rh_mean"].std()),
+
+        "precipitation_mean" : float(df["precipitation"].mean()),
+        "precipitation_std" : float(df["precipitation"].std())
+    }
+
+    return hist_data
+
 

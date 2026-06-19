@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 
 def rate_CIA(tmean, rhmean):       
         if 22 <= tmean <= 28 and 55 <= rhmean <= 80:
@@ -75,3 +75,10 @@ def compute_tci(tmax, tmean, rhmin, rhmean, rain_mm, sunshine_hours, wind_kmh):
         final_tci = round(max(0.0, raw_tci + MP), 2)
 
         return final_tci
+def z_score(current, mean, std):
+
+        if std==0:
+                return 0
+        return (current-mean)/std
+
+
