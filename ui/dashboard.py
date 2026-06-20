@@ -1,7 +1,7 @@
 import streamlit as st
-from api.locator import get_coords
-from api.climate import get_climate
-from api.destination import get_terrain_type
+from services.api.locator import get_coords
+from services.api.climate import get_climate
+from services.api.destination import get_terrain_type
 
 
 def show_dashboard():
