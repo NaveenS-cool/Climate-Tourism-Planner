@@ -619,83 +619,297 @@ def show_dashboard():
     # Climate Score Gauge Placeholder
     gauge_placeholder = st.empty()
 
-    # Date Slider
+    # TCI Score Graph (Google Weather Style)
     today_str = datetime.today().strftime("%Y-%m-%d")
     total_days = len(current["dates"])
-    
-    # Calculate counts and percentages dynamically
     past_count = sum(1 for d in current["dates"] if d < today_str)
-    current_count = sum(1 for d in current["dates"] if d == today_str)
-    future_count = sum(1 for d in current["dates"] if d > today_str)
-    
-    # Avoid division by zero just in case
-    safe_total = total_days if total_days > 0 else 1
-    past_pct = (past_count / safe_total) * 100
-    current_pct = (current_count / safe_total) * 100
-    future_pct = (future_count / safe_total) * 100
 
-    # Render visual region scale banner
-    timeline_banner_html = f"""
-    <div class="timeline-banner">
-        <div class="timeline-region past" style="width: {past_pct:.1f}%;">
-            <span class="timeline-icon">⏮</span>Past ({past_count}d)
-        </div>
-        <div class="timeline-region current" style="width: {current_pct:.1f}%;">
-            <span class="timeline-icon">🟢</span>Today
-        </div>
-        <div class="timeline-region future" style="width: {future_pct:.1f}%;">
-            Forecast ({future_count}d)<span class="timeline-icon">⏭</span>
-        </div>
-    </div>
-    """
-    st.markdown(timeline_banner_html, unsafe_allow_html=True)
+    # Reset selection when destination changes by removing key to allow default initialization
+    if "last_destination" not in st.session_state or st.session_state["last_destination"] != destination:
+        st.session_state["last_destination"] = destination
+        if "day_index_input" in st.session_state:
+            del st.session_state["day_index_input"]
 
-    date_labels = []
-    for idx, d in enumerate(current["dates"]):
-        dt = datetime.strptime(d, "%Y-%m-%d")
-        lbl = dt.strftime("%d %b")
-        if d == today_str:
-            lbl += " (Today)"
-        elif idx == 0:
-            lbl += " (Past)"
-        elif idx == total_days - 1:
-            lbl += " (Forecast)"
-        date_labels.append(lbl)
+    # Hidden text input to sync selection with Streamlit state
+    st.markdown("""
+    <style>
+    div[data-testid="stTextInput"] {
+        display: none !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    # Use past_count as default index (which maps to today if present)
-    default_idx = past_count if 0 <= past_count < total_days else total_days // 2
-
-    selected_date = st.select_slider(
-        "SELECT DATE",
-        options=date_labels,
-        value=date_labels[default_idx],
-        key="date_slider",
-        label_visibility="collapsed",
+    selected_idx_str = st.text_input(
+        "Hidden Day Index",
+        value=str(past_count),
+        key="day_index_input",
+        placeholder="day_index_input",
+        label_visibility="collapsed"
     )
-    selected_idx  = date_labels.index(selected_date)
+
+    try:
+        selected_idx = int(selected_idx_str)
+        if selected_idx < 0 or selected_idx >= total_days:
+            selected_idx = past_count
+    except ValueError:
+        selected_idx = past_count
+
+    selected_date = current["dates"][selected_idx]
     selected_tci  = tci_scores[selected_idx]
 
+    # Generate points for the graph line & fill
+    points = []
+    width_per_day = 70
+    chart_height = 180
+    total_width = total_days * width_per_day
+
+    for i in range(total_days):
+        x = 35 + i * width_per_day
+        y = 110 - (tci_scores[i] / 100) * 70
+        points.append((x, y))
+
+    line_path = "M " + " L ".join(f"{x} {y:.1f}" for x, y in points)
+    area_path = f"M {points[0][0]} 125 " + " ".join(f"L {x} {y:.1f}" for x, y in points) + f" L {points[-1][0]} 125 Z"
+
+    def get_tci_color(score):
+        if score >= 80: return "#4ade80"
+        elif score >= 65: return "#a3e4c0"
+        elif score >= 50: return "#fbbf24"
+        elif score >= 35: return "#f97316"
+        else: return "#f87171"
+
+    svg_elements = []
+
+    # 1. Grid Lines and Active Highlights
+    for i, d in enumerate(current["dates"]):
+        x = 35 + i * width_per_day
+        
+        # Grid line
+        svg_elements.append(
+            f'<line x1="{x}" y1="20" x2="{x}" y2="135" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 2" />'
+        )
+        
+        # Active highlight background
+        if i == selected_idx:
+            svg_elements.append(
+                f'<rect class="chart-active-col" x="{x - 30}" y="10" width="60" height="160" rx="12" '
+                f'fill="rgba(82, 183, 136, 0.08)" stroke="rgba(82, 183, 136, 0.25)" stroke-width="1.5" />'
+            )
+
+    # 2. Line/Area Paths
+    svg_elements.append(
+        f'<path class="chart-area" d="{area_path}" fill="url(#areaGrad)" />'
+    )
+    svg_elements.append(
+        f'<path class="chart-line" d="{line_path}" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" />'
+    )
+
+    # 3. Graph Nodes (Dots and Text)
+    for i, d in enumerate(current["dates"]):
+        x = 35 + i * width_per_day
+        y = points[i][1]
+        tci = tci_scores[i]
+        q_color = get_tci_color(tci)
+        
+        dt = datetime.strptime(d, "%Y-%m-%d")
+        day_lbl = "Today" if d == today_str else dt.strftime("%d %b")
+        anim_delay = 0.3 + i * 0.04
+        
+        svg_elements.append(
+            f'<g class="chart-node" style="animation-delay: {anim_delay:.2f}s;">'
+            f'<circle cx="{x}" cy="{y}" r="4" fill="#ffffff" stroke="{q_color}" stroke-width="2" />'
+            f'<text x="{x}" y="{y - 12}" class="chart-score-text" text-anchor="middle">{tci:.0f}</text>'
+            f'<text x="{x}" y="145" class="chart-day-text" text-anchor="middle">{day_lbl}</text>'
+            f'</g>'
+        )
+
+    # 4. Input Click Targets
+    for i in range(total_days):
+        x = 35 + i * width_per_day
+        svg_elements.append(
+            f'<rect x="{x - 35}" y="0" width="{width_per_day}" height="{chart_height}" '
+            f'fill="transparent" style="cursor:pointer;" onclick="selectDay({i})" />'
+        )
+
+    svg_content = "\n".join(svg_elements)
+    graph_html = f"""<style>
+.tci-chart-wrapper {{
+    width: 100%;
+    margin: 1.5rem 0 2rem;
+    position: relative;
+    z-index: 1;
+}}
+.tci-chart-container {{
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 1.2rem 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor: grab;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}}
+.tci-chart-container::-webkit-scrollbar {{
+    display: none;
+}}
+.tci-chart-container:active {{
+    cursor: grabbing;
+}}
+.tci-chart-container svg {{
+    width: 100%;
+    min-width: {total_width}px;
+    height: auto;
+    display: block;
+}}
+.chart-score-text {{
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    fill: #ffffff;
+}}
+.chart-day-text {{
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+    fill: rgba(255, 255, 255, 0.4);
+}}
+@keyframes strokeAnim {{
+    to {{ stroke-dashoffset: 0; }}
+}}
+.chart-line {{
+    stroke-dasharray: 2000;
+    stroke-dashoffset: 2000;
+    animation: strokeAnim 1.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}}
+@keyframes fillFadeIn {{
+    from {{ opacity: 0; }}
+    to {{ opacity: 0.15; }}
+}}
+.chart-area {{
+    animation: fillFadeIn 1.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}}
+@keyframes labelFadeIn {{
+    from {{ opacity: 0; transform: translateY(4px); }}
+    to {{ opacity: 1; transform: translateY(0); }}
+}}
+.chart-node {{
+    opacity: 0;
+    animation: labelFadeIn 0.5s ease-out forwards;
+}}
+</style>
+<div class="tci-chart-wrapper">
+    <div id="tci-chart-container" class="tci-chart-container">
+        <svg viewBox="0 0 {total_width} {chart_height}" width="100%" height="auto" style="display:block;">
+            <defs>
+                <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#00ffa3" />
+                    <stop offset="100%" stop-color="#00c97a" />
+                </linearGradient>
+                <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="rgba(82, 183, 136, 0.25)" />
+                    <stop offset="100%" stop-color="rgba(82, 183, 136, 0)" />
+                </linearGradient>
+            </defs>
+            {svg_content}
+        </svg>
+    </div>
+</div>
+<script>
+var container = document.getElementById('tci-chart-container');
+if (container) {{
+    var isDown = false;
+    var startX;
+    var scrollLeft;
+    var dragMoved = false;
+    container.addEventListener('mousedown', function(e) {{
+        isDown = true;
+        dragMoved = false;
+        startX = e.pageX - container.offsetLeft;
+        scrollLeft = container.scrollLeft;
+    }});
+    container.addEventListener('mouseleave', function() {{
+        isDown = false;
+    }});
+    container.addEventListener('mouseup', function() {{
+        isDown = false;
+    }});
+    container.addEventListener('mousemove', function(e) {{
+        if (!isDown) return;
+        e.preventDefault();
+        var x = e.pageX - container.offsetLeft;
+        var walk = (x - startX) * 1.5;
+        if (Math.abs(x - startX) > 5) {{
+            dragMoved = true;
+        }}
+        container.scrollLeft = scrollLeft - walk;
+    }});
+    container.addEventListener('wheel', function(e) {{
+        if (e.deltaY !== 0) {{
+            e.preventDefault();
+            container.scrollLeft += e.deltaY * 1.2;
+        }}
+    }});
+    setTimeout(function() {{
+        var activeElement = container.querySelector('.chart-active-col');
+        if (activeElement) {{
+            var containerRect = container.getBoundingClientRect();
+            var activeRect = activeElement.getBoundingClientRect();
+            var elementLeft = activeRect.left - containerRect.left + container.scrollLeft;
+            var elementWidth = activeRect.width;
+            container.scrollLeft = elementLeft - (container.offsetWidth / 2) + (elementWidth / 2);
+        }}
+    }}, 150);
+}}
+window.selectDay = function(index) {{
+    if (typeof dragMoved !== 'undefined' && dragMoved) return;
+    var targetInput = document.querySelector('input[placeholder="day_index_input"]');
+    if (targetInput) {{
+        var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        setter.call(targetInput, index);
+        targetInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+        targetInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+        targetInput.focus();
+        targetInput.blur();
+    }}
+}};
+</script>"""
+    st.markdown(
+        '<div class="section-sep"><div class="section-sep-line"></div>'
+        '<div class="section-sep-label">Forecast Timeline</div>'
+        '<div class="section-sep-line"></div></div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(graph_html, unsafe_allow_html=True)
+
     # Climate Score Gauge
+    # Use today's index (past_count) to permanently display today's score
+    current_tci = tci_scores[past_count]
+
     # Score quality label
-    if selected_tci >= 80:
+    if current_tci >= 80:
         quality, quality_color = "Excellent",  "#4ade80"
-    elif selected_tci >= 65:
+    elif current_tci >= 65:
         quality, quality_color = "Good",       "#a3e4c0"
-    elif selected_tci >= 50:
+    elif current_tci >= 50:
         quality, quality_color = "Fair",       "#fbbf24"
-    elif selected_tci >= 35:
+    elif current_tci >= 35:
         quality, quality_color = "Poor",       "#f97316"
     else:
         quality, quality_color = "Harsh",      "#f87171"
 
     arc_length    = 257.6
-    target_offset = arc_length * (1 - selected_tci / 100)
-    anim_key      = f"gs{selected_idx}"
+    target_offset = arc_length * (1 - current_tci / 100)
+    anim_key      = f"gs{past_count}"
 
     # Gradient colours keyed to score (bright against dark bg)
-    if selected_tci >= 70:
+    if current_tci >= 70:
         grad_start, grad_end = "#00ffa3", "#00c97a"   # vivid mint → emerald
-    elif selected_tci >= 50:
+    elif current_tci >= 50:
         grad_start, grad_end = "#f9cb45", "#f97316"   # amber → orange
     else:
         grad_start, grad_end = "#ff6b6b", "#c0392b"   # coral → red
@@ -798,7 +1012,7 @@ def show_dashboard():
                 <text x="199" y="134" class="gauge-tick" fill="rgba(255,255,255,0.18)"
                       font-size="7" text-anchor="middle">100</text>
                 <!-- Score number -->
-                <text class="gauge-score-num"  x="110" y="78">{selected_tci:.0f}</text>
+                <text class="gauge-score-num"  x="110" y="78">{current_tci:.0f}</text>
                 <!-- Quality label -->
                 <text class="gauge-score-quality" x="110" y="108">{quality}</text>
                 <!-- Sub-label -->
