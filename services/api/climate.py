@@ -26,9 +26,10 @@ def get_climate(lat, long):
     today=date.today().isoformat()
     current={}
     data = requests.get(url, params=params, headers={"User-Agent": "ClimateTourismPlanner"}).json()
-    for i in range(len(data["time"])):
-        if data["time"][i]==today:
-            current={0:today,1:data["temperature_2m_mean"][i],2: data["relative_humidity_2m_mean"][i],3:data["precipitation_sum"][i]}
+    daily = data["daily"]
+    for i in range(len(daily["time"])):
+        if daily["time"][i]==today:
+            current={0:today,1:daily["temperature_2m_mean"][i],2: daily["relative_humidity_2m_mean"][i],3:daily["precipitation_sum"][i]}
 
 
 
