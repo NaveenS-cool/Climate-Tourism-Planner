@@ -2,7 +2,6 @@ import streamlit as st
 from datetime import datetime
 from services.api.locator import get_coords
 from services.api.climate import get_climate, hist_climate
-from services.api.destination import get_terrain_type
 from services.scores import compute_tci, z_score
 
 
@@ -572,6 +571,14 @@ def show_dashboard():
     """.replace("{dest}", destination)
     loader_placeholder.markdown(loader_html, unsafe_allow_html=True)
 
+    # Back Button
+    st.markdown('<div class="back-btn-wrapper">', unsafe_allow_html=True)
+    if st.button("← Back"):
+        st.session_state["current_page"] = "intro"
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
     # Backend calls (untouched)
     lat, lon = get_coords(destination)
     raw_daily, _ = get_climate(lat, lon)
@@ -1095,9 +1102,4 @@ window.selectDay = function(index) {{
             unsafe_allow_html=True,
         )
 
-    # Back Button
-    st.markdown('<div class="back-btn-wrapper">', unsafe_allow_html=True)
-    if st.button("← Back"):
-        st.session_state["current_page"] = "intro"
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+    
