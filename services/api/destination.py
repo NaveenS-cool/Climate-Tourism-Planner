@@ -1,31 +1,30 @@
 import time
 import requests
 from collections import defaultdict
-from .locator import get_coords
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 PLACE_CATEGORIES = {
-    "beach":        {"natural": ["beach", "sand"], "leisure": ["beach_resort"]},
-    "mountain":     {"natural": ["peak", "ridge", "saddle", "cliff", "arete", "mountain"]},
-    "hill":         {"natural": ["hill"]},
-    "waterfall":    {"waterway": ["waterfall"], "natural": ["waterfall"]},
-    "river_lake":   {"natural": ["water", "bay", "spring", "hot_spring"],
-                     "waterway": ["river", "stream", "lake"]},
-    "forest":       {"natural": ["wood"], "landuse": ["forest"],
-                     "leisure": ["nature_reserve"]},
-    "cave":         {"natural": ["cave_entrance"]},
-    "valley":       {"natural": ["valley", "gorge"]},
-    "volcano":      {"natural": ["volcano"]},
-    "wetland":      {"natural": ["wetland", "marsh", "mangrove", "mud"]},
-    "island":       {"place": ["island", "islet"]},
-    "park":         {"leisure": ["park", "garden"],
-                     "landuse": ["recreation_ground", "village_green"]},
-    "wildlife":     {"leisure": ["bird_hide", "wildlife_hide"]},
-    "viewpoint":    {"tourism": ["viewpoint"]},
-    "historic":     {"historic": ["castle", "fort", "ruins", "archaeological_site",
-                                  "monument", "battlefield"]},
-    "religious":    {"amenity": ["place_of_worship"]},
+    "beach":        {"natural": ["coastline"],"place": ["islet", "island"]}, 
+    "mountain":     {"natural": ["peak", "ridge", "saddle", "cliff","mountain","hill"]}, 
+    "waterbodies":   {"water": ["lake", "reservoir"]}, 
+    "forest":       {"landuse": ["forest"],
+                     "leisure": ["nature_reserve"]}, 
+    "urban": {"place": ["city","town"]},
+    "village": {"place": ["village","hamlet","isolated_dwelling"]},
+    "wildlife":  {"boundary": ["national_park","protected_area"], "leisure" : ["nature_reserve"]}
+
+}
+
+CATEGORY_WEIGHTS = {
+    "beach": 5,
+    "mountain": 4,
+    "forest": 2,
+    "wildlife": 3,
+    "waterbodies": 2,
+    "village": 2,
+    "urban": 1,
+    "other": 0
 }
 
 
@@ -42,22 +41,36 @@ def classify_tags(tags):
 def get_terrain_type(lat, lon, radius=5000):
 
     query = f"""
-    [out:json][timeout:90];
-    (
-      node["natural"](around:{radius},{lat},{lon});
-      node["waterway"~"river|stream|waterfall"](around:{radius},{lat},{lon});
-      node["leisure"~"park|garden|nature_reserve|beach_resort|bird_hide"](around:{radius},{lat},{lon});
-      node["tourism"="viewpoint"](around:{radius},{lat},{lon});
-      node["historic"](around:{radius},{lat},{lon});
-      node["amenity"="place_of_worship"](around:{radius},{lat},{lon});
-      node["place"~"island|islet"](around:{radius},{lat},{lon});
-      way["natural"](around:{radius},{lat},{lon});
-      way["waterway"](around:{radius},{lat},{lon});
-      way["landuse"~"forest|reservoir|recreation_ground"](around:{radius},{lat},{lon});
-      way["leisure"~"park|garden|nature_reserve"](around:{radius},{lat},{lon});
-    );
-    out center tags;
-    """
+[out:json][timeout:25];
+
+(
+  node(around:{radius},{lat},{lon})["natural"];
+  way(around:{radius},{lat},{lon})["natural"];
+  relation(around:{radius},{lat},{lon})["natural"];
+
+  node(around:{radius},{lat},{lon})["water"];
+  way(around:{radius},{lat},{lon})["water"];
+  relation(around:{radius},{lat},{lon})["water"];
+
+  node(around:{radius},{lat},{lon})["landuse"];
+  way(around:{radius},{lat},{lon})["landuse"];
+  relation(around:{radius},{lat},{lon})["landuse"];
+
+  node(around:{radius},{lat},{lon})["place"];
+  way(around:{radius},{lat},{lon})["place"];
+  relation(around:{radius},{lat},{lon})["place"];
+
+  node(around:{radius},{lat},{lon})["boundary"];
+  way(around:{radius},{lat},{lon})["boundary"];
+  relation(around:{radius},{lat},{lon})["boundary"];
+
+  node(around:{radius},{lat},{lon})["leisure"];
+  way(around:{radius},{lat},{lon})["leisure"];
+  relation(around:{radius},{lat},{lon})["leisure"];
+);
+
+out tags;
+"""
 
     headers = {
         "User-Agent": "ClimaTourismPlanner",
@@ -96,7 +109,7 @@ def get_terrain_type(lat, lon, radius=5000):
 
         categories = classify_tags(tags)
         for cat in categories:
-            type_counts[cat] += 1
+            type_counts[cat] += CATEGORY_WEIGHTS[cat]
 
         places.append({
             "name": name,
@@ -108,6 +121,7 @@ def get_terrain_type(lat, lon, radius=5000):
 
     primary = max(type_counts, key=type_counts.get) if type_counts else "unknown"
     all_types = sorted(type_counts, key=type_counts.get, reverse=True)
+    print(type_counts)
 
     return {
         "coords": (lat, lon),
@@ -116,12 +130,3 @@ def get_terrain_type(lat, lon, radius=5000):
         "places": places,
     }
 
-
-location = "Coorg, Karnataka"
-
-lat, long = get_coords(location)
-
-result = get_terrain_type(lat, long)
-
-print(f"Primary terrain : {result['primary']}")
-print(f"All types found : {result['all_types']}")
