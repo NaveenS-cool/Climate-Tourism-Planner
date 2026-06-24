@@ -1,6 +1,8 @@
 import requests
 import pandas as pd
 from datetime import date, timedelta
+from concurrent.futures import ThreadPoolExecutor
+from locator import get_coords
 
 def get_climate(lat, long):
 
@@ -36,37 +38,46 @@ def get_climate(lat, long):
 
     return data["daily"],current
 
-def hist_climate(lat,long):
+
+def fetch_year_window(lat, long, year_offset):
 
     today = date.today()
+    target_year = today.year - year_offset
+    center_date = date(target_year,today.month,today.day)
+    start_date = center_date - timedelta(days=7)
+    end_date = center_date + timedelta(days=7)
+
+    url = "https://archive-api.open-meteo.com/v1/archive"
+    params = {
+        "latitude": lat,
+        "longitude": long,
+        "start_date": start_date.strftime("%Y-%m-%d"),
+        "end_date": end_date.strftime("%Y-%m-%d"),
+        "daily": ["temperature_2m_mean","relative_humidity_2m_mean", "precipitation_sum"],
+        "timezone": "Asia/Kolkata"
+    }
+    resp = requests.get(url, params=params, headers={"User-Agent": "ClimateTourismPlanner"})
+    return resp.json()["daily"]
+
+def hist_climate(lat,long):
+
     results = []
 
-    for year_offset in range(1,6):
+    with ThreadPoolExecutor(max_workers=4) as executor:
 
-        target_year = today.year - year_offset
-        center_date = date(target_year,today.month,today.day)
-        start_date = center_date - timedelta(days=7)
-        end_date = center_date + timedelta(days=7)
-
-        url = "https://archive-api.open-meteo.com/v1/archive"
-        params = {
-            "latitude": lat,
-            "longitude": long,
-            "start_date": start_date.strftime("%Y-%m-%d"),
-            "end_date": end_date.strftime("%Y-%m-%d"),
-            "daily": ["temperature_2m_mean","relative_humidity_2m_mean", "precipitation_sum"],
-            "timezone": "Asia/Kolkata"
-        }
-        resp = requests.get(url, params=params, headers={"User-Agent": "ClimateTourismPlanner"})
-        data = resp.json()["daily"]
-
+        responses = list(
+            executor.map(
+            lambda offset: fetch_year_window(lat,long,offset), range(1,6)
+            )
+        )
+    for data in responses:
         for i in range(len(data["time"])):
             results.append({
                 "date": data["time"][i],
                 "temp_mean": data["temperature_2m_mean"][i],
                 "rh_mean": data["relative_humidity_2m_mean"][i],
                 "precipitation": data["precipitation_sum"][i],
-        })
+            })
     
     df = pd.DataFrame(results)
 
@@ -82,5 +93,6 @@ def hist_climate(lat,long):
     }
 
     return hist_data
+
 
 
