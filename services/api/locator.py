@@ -1,9 +1,11 @@
 import requests
 import streamlit as st
 
-url = "https://nominatim.openstreetmap.org/search"
 
+@st.cache_data
 def get_coords(location):
+
+    url = "https://nominatim.openstreetmap.org/search"
     params = {
         "q": location,
         "format": "json"

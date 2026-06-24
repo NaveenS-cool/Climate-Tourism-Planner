@@ -4,6 +4,8 @@ from datetime import date, timedelta
 from concurrent.futures import ThreadPoolExecutor
 import streamlit as st
 
+
+@st.cache_data(ttl=5400)
 def get_climate(lat, long):
 
     url = "https://api.open-meteo.com/v1/forecast"
@@ -38,8 +40,10 @@ def get_climate(lat, long):
 
     return data["daily"],current
 
-
+@st.cache_data
 def fetch_year_window(lat, long, year_offset):
+
+    print("cache miss")
 
     today = date.today()
     target_year = today.year - year_offset
@@ -60,6 +64,7 @@ def fetch_year_window(lat, long, year_offset):
     return resp.json()["daily"]
 
 def hist_climate(lat,long):
+
 
     results = []
 
