@@ -1,7 +1,7 @@
 import requests
+import streamlit as st
 
 url = "https://nominatim.openstreetmap.org/search"
-
 
 def get_coords(location):
     params = {

@@ -575,7 +575,6 @@ def show_dashboard():
     # Backend calls (untouched)
     lat, lon = get_coords(destination)
     raw_daily, _ = get_climate(lat, lon)
-    terrain_data = get_terrain_type(lat, lon)
     hist_data = hist_climate(lat, lon)
 
     current = {
@@ -600,7 +599,6 @@ def show_dashboard():
         )
         tci_scores.append(tci)
 
-    terrain_type = terrain_data["primary"]
 
     loader_placeholder.empty()
 
@@ -610,7 +608,6 @@ def show_dashboard():
         <div class="dash-header">
             <div class="dash-eyebrow">Climate Planner</div>
             <div class="dashboard-title"><strong>{destination}</strong></div>
-            <div class="terrain-badge">{terrain_type.title()}</div>
         </div>
         """,
         unsafe_allow_html=True,

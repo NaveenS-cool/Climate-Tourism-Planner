@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 from datetime import date, timedelta
 from concurrent.futures import ThreadPoolExecutor
-from locator import get_coords
+import streamlit as st
 
 def get_climate(lat, long):
 
