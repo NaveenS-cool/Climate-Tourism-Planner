@@ -700,8 +700,75 @@ def show_dashboard():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-    # Backend calls (untouched)
-    lat, lon = get_coords(destination)
+    # Backend calls (untouched except safe unpacking)
+    coords = get_coords(destination)
+    if not coords:
+        loader_placeholder.empty()
+        
+        # Display the premium error card
+        st.markdown(
+            """
+            <style>
+            .error-card-wrap {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 3rem 2.5rem;
+                position: relative;
+                z-index: 1;
+                background: rgba(255, 255, 255, 0.04);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 28px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+                max-width: 520px;
+                margin: 4rem auto;
+                text-align: center;
+            }
+            .error-icon {
+                font-size: 3.2rem;
+                margin-bottom: 1.2rem;
+                animation: pulseError 2s infinite alternate ease-in-out;
+            }
+            @keyframes pulseError {
+                0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255,133,133,0)); }
+                100% { transform: scale(1.08); filter: drop-shadow(0 0 10px rgba(255,133,133,0.3)); }
+            }
+            .error-title {
+                font-family: 'Segoe UI', system-ui, sans-serif;
+                font-size: 1.6rem;
+                font-weight: 700;
+                color: #ff8585;
+                margin-bottom: 0.8rem;
+                letter-spacing: -0.01em;
+            }
+            .error-desc {
+                font-family: 'Segoe UI', system-ui, sans-serif;
+                font-size: 0.98rem;
+                color: rgba(255, 255, 255, 0.7);
+                line-height: 1.6;
+            }
+            .error-desc strong {
+                color: #ffffff;
+                font-weight: 600;
+            }
+            </style>
+            <div class="error-card-wrap">
+                <div class="error-icon">⚠️</div>
+                <div class="error-title">Destination Not Found</div>
+                <div class="error-desc">
+                    We couldn't resolve coordinates for <strong>"{dest}"</strong>. <br>
+                    Please double-check the spelling, or try searching for a major city, state, or country name.
+                </div>
+            </div>
+            """.replace("{dest}", destination),
+            unsafe_allow_html=True,
+        )
+        return
+
+    lat, lon = coords
     raw_daily, _ = get_climate(lat, lon)
     hist_data = hist_climate(lat, lon)
 
