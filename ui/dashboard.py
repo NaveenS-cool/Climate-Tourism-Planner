@@ -3,6 +3,26 @@ from datetime import datetime
 from services.api.locator import get_coords
 from services.api.climate import get_climate, hist_climate
 from services.scores import compute_tci, z_score
+from services.recommendations import generate_recommendations
+
+
+def get_recommendation_icon(text):
+    text_lower = text.lower()
+    if any(w in text_lower for w in ["rain", "precipitation", "wet", "umbrella", "shower", "monsoon"]):
+        return "🌧️"
+    elif any(w in text_lower for w in ["sun", "uv", "heat", "hot", "sunscreen", "sunny", "warm"]):
+        return "☀️"
+    elif any(w in text_lower for w in ["cold", "chilly", "freeze", "jacket", "sweater", "warm clothes"]):
+        return "🧥"
+    elif any(w in text_lower for w in ["wind", "breezy", "gale", "gust", "windy"]):
+        return "💨"
+    elif any(w in text_lower for w in ["humidity", "humid", "sticky", "hydration", "water", "sweat"]):
+        return "💧"
+    elif any(w in text_lower for w in ["hike", "trek", "outdoor", "walk", "shoes", "explore"]):
+        return "🥾"
+    elif any(w in text_lower for w in ["sightseeing", "visit", "tour", "view", "scenery"]):
+        return "📸"
+    return "💡"
 
 
 def show_dashboard():
@@ -507,6 +527,107 @@ def show_dashboard():
         background: rgba(82,183,136,0.08) !important;
         box-shadow: none !important;
         transform: none !important;
+    }
+
+    /* Recommendations Panel */
+    .recommendations-panel {
+        background: rgba(255,255,255,0.035);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 24px;
+        padding: 1.8rem;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+
+    .recommendations-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+    }
+
+    .recommendation-item {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 1.1rem 1.4rem;
+        transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .recommendation-item:hover {
+        transform: translateX(6px);
+        background: rgba(82, 183, 136, 0.08);
+        border-color: rgba(82, 183, 136, 0.3);
+    }
+
+    .recommendation-icon {
+        font-size: 1.3rem;
+        color: #52b788;
+        background: rgba(82, 183, 136, 0.12);
+        padding: 0.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+    }
+
+    .recommendation-text {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        font-size: 0.92rem;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.88);
+        line-height: 1.5;
+    }
+
+    /* Recommendations Error Card */
+    .recommendations-error-card {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        background: rgba(248, 113, 113, 0.05);
+        border: 1px solid rgba(248, 113, 113, 0.18);
+        border-radius: 16px;
+        padding: 1.3rem 1.6rem;
+    }
+
+    .recommendations-error-icon {
+        font-size: 1.4rem;
+        color: #f87171;
+        background: rgba(248, 113, 113, 0.12);
+        padding: 0.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
+        height: 42px;
+    }
+
+    .recommendations-error-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .recommendations-error-title {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #f87171;
+    }
+
+    .recommendations-error-desc {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 0.84rem;
+        color: rgba(255, 255, 255, 0.65);
+        line-height: 1.45;
     }
 
     /* Responsive */
@@ -1101,5 +1222,56 @@ window.selectDay = function(index) {{
             </div>""",
             unsafe_allow_html=True,
         )
+
+    # AI Recommendations
+    st.markdown(
+        '<div class="section-sep"><div class="section-sep-line"></div>'
+        '<div class="section-sep-label">Recommendations</div>'
+        '<div class="section-sep-line"></div></div>',
+        unsafe_allow_html=True,
+    )
+
+    with st.spinner("Generating Recommendations..."):
+        recs = generate_recommendations(
+            destination=destination,
+            tci=selected_tci,
+            temperature=current["temp"][selected_idx],
+            humidity=current["humidity"][selected_idx],
+            precipitation=current["precip"][selected_idx],
+            temp_z=z_temp,
+            rh_z=z_rh,
+            precip_z=z_precip
+        )
+
+    is_error = len(recs) == 3 and recs[0] == "Unable to generate recommendations at the moment."
+
+    if is_error:
+        panel_content = (
+            f'<div class="recommendations-error-card">'
+            f'<div class="recommendations-error-icon">⚠️</div>'
+            f'<div class="recommendations-error-content">'
+            f'<div class="recommendations-error-title">{recs[0]}</div>'
+            f'<div class="recommendations-error-desc">{recs[1]} {recs[2]}</div>'
+            f'</div>'
+            f'</div>'
+        )
+    else:
+        recs_html_items = ""
+        for r in recs:
+            icon = get_recommendation_icon(r)
+            recs_html_items += (
+                f'<div class="recommendation-item">'
+                f'<div class="recommendation-icon">{icon}</div>'
+                f'<div class="recommendation-text">{r}</div>'
+                f'</div>'
+            )
+        panel_content = f'<div class="recommendations-list">{recs_html_items}</div>'
+
+    recs_panel_html = (
+        f'<div class="recommendations-panel">'
+        f'{panel_content}'
+        f'</div>'
+    )
+    st.markdown(recs_panel_html, unsafe_allow_html=True)
 
     
