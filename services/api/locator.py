@@ -2,7 +2,7 @@ import requests
 import streamlit as st
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def get_coords(location):
 
     url = "https://nominatim.openstreetmap.org/search"
@@ -18,6 +18,9 @@ def get_coords(location):
     )
 
     data = response.json()
+    if not data:
+        return False
+    
 
     lat = data[0]["lat"]
     long = data[0]["lon"]

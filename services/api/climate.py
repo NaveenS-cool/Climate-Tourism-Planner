@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import streamlit as st
 
 
-@st.cache_data(ttl=5400)
+@st.cache_data(ttl=5400,show_spinner=False)
 def get_climate(lat, long):
 
     url = "https://api.open-meteo.com/v1/forecast"
