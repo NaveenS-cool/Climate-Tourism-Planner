@@ -1277,7 +1277,7 @@ def show_dashboard():
 
     def navigate_to_intro():
         st.session_state["current_page"] = "intro"
-        st.stop()
+        st.rerun()
 
     # Back Button
     st.markdown('<div class="back-btn-wrapper">', unsafe_allow_html=True)

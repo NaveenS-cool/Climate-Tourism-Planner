@@ -265,7 +265,7 @@ def show_intro():
         if dest:
             st.session_state["destination"] = dest
             st.session_state["current_page"] = "dashboard"
-            st.stop()
+            st.rerun()
 
     _, col_content, _ = st.columns([1, 1.5, 1])
 
