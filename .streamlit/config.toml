@@ -1,5 +1,2 @@
-[snowflake.responseCache]
-initialResponseCache = false
-
-[global]
-storeCachedForwardMessagesInMemory = false
+[server]
+maxMessageSize = 400

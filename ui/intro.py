@@ -13,7 +13,7 @@ def show_intro():
     #  - div[data-testid="column"]:nth-of-type(2): glass-morphism card on middle col
     #  - .stTextInput / .stButton overrides for premium look
     
-    st.markdown(
+    st.html(
         """
         <style>
         /* ---------- RESET / BASE ---------- */
@@ -216,8 +216,7 @@ def show_intro():
             .headline   { font-size: 1.8rem; }
         }
         </style>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
     
@@ -250,9 +249,8 @@ def show_intro():
         for o in orbs
     )
 
-    st.markdown(
-        f'<div class="earth-bg">{leaf_divs}{orb_divs}</div>',
-        unsafe_allow_html=True,
+    st.html(
+        f'<div class="earth-bg">{leaf_divs}{orb_divs}</div>'
     )
 
     

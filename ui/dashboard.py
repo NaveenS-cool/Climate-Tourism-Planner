@@ -28,7 +28,7 @@ def get_recommendation_icon(text):
 def show_dashboard():
     destination = st.session_state["destination"]
 
-    st.markdown("""
+    st.html("""
     <style>
     /* Reset & Base */
     #root > div:first-child { background: transparent !important; }
@@ -211,7 +211,7 @@ def show_dashboard():
 
     .gauge-score-num {
         font-family: 'Segoe UI', system-ui, sans-serif;
-        font-size: 3.8rem;
+        font-size: 2.5rem;
         font-weight: 700;
         fill: #ffffff;
         text-anchor: middle;
@@ -638,7 +638,7 @@ def show_dashboard():
         .zscore-value { font-size: 1.4rem; }
     }
     </style>
-    """, unsafe_allow_html=True)
+    """)
 
     leaves = [
         {"left": "5%",  "size": "22px", "dur": "20s", "delay": "0s"},
@@ -652,7 +652,7 @@ def show_dashboard():
         f'animation-duration:{l["dur"]};animation-delay:{l["delay"]};"></div>'
         for l in leaves
     )
-    st.markdown(f'<div class="earth-bg">{leaf_divs}</div>', unsafe_allow_html=True)
+    st.html(f'<div class="earth-bg">{leaf_divs}</div>')
 
     # Loader
     loader_placeholder = st.empty()
@@ -1126,7 +1126,7 @@ window.selectDay = function(index) {{
     }}
     .gauge-score-num {{
         font-family: 'Segoe UI', system-ui, sans-serif;
-        font-size: 42px;
+        font-size: 28px;
         font-weight: 700;
         fill: #ffffff;
         text-anchor: middle;
