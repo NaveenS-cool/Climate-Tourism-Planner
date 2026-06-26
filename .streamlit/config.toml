@@ -1,5 +1,0 @@
-[snowflake.responseCache]
-initialResponseCache = false
-
-[global]
-storeCachedForwardMessagesInMemory = false
