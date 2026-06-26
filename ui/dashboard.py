@@ -692,13 +692,7 @@ def show_dashboard():
     """.replace("{dest}", destination)
     loader_placeholder.markdown(loader_html, unsafe_allow_html=True)
 
-    # Back Button
-    st.markdown('<div class="back-btn-wrapper">', unsafe_allow_html=True)
-    if st.button("← Back"):
-        st.session_state["current_page"] = "intro"
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
+    
 
     # Backend calls (untouched except safe unpacking)
     coords = get_coords(destination)
@@ -1340,5 +1334,13 @@ window.selectDay = function(index) {{
         f'</div>'
     )
     st.markdown(recs_panel_html, unsafe_allow_html=True)
+
+    # Back Button
+    st.markdown('<div class="back-btn-wrapper">', unsafe_allow_html=True)
+    if st.button("← Back"):
+        st.session_state["current_page"] = "intro"
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
     
