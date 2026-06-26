@@ -1,6 +1,8 @@
 # Climate-Tourism-Planner
 A Streamlit-based web application that analyzes climate suitability for tourism destinations using real-time weather and historical climate data, for more informed tourism planning.
 
+URL : [Click here](https://climate-tourism-planner-st.streamlit.app/)
+
 ## Features
 
 - Search destinations across Kerala
@@ -31,8 +33,8 @@ A Streamlit-based web application that analyzes climate suitability for tourism 
 
 ## CONTRIBUTORS
 
-- Naveen S
-- Levin Polly
-- Aravind A R 
+- [Naveen S](https://github.com/NaveenS-cool)
+- [Levin Polly](https://github.com/luxin-silent)
+- [Aravind A R](https://github.com/Yourname721)
 
 
