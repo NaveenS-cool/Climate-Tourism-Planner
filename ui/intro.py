@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 
 
 def show_intro():
@@ -264,6 +265,7 @@ def show_intro():
         if dest:
             st.session_state["destination"] = dest
             st.session_state["current_page"] = "dashboard"
+            time.sleep(0.15)
 
     _, col_content, _ = st.columns([1, 1.5, 1])
 

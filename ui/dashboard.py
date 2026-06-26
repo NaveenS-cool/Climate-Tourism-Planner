@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 from datetime import datetime
 from services.api.locator import get_coords
 from services.api.climate import get_climate, hist_climate
@@ -1335,6 +1336,7 @@ window.selectDay = function(index) {{
 
     def navigate_to_intro():
         st.session_state["current_page"] = "intro"
+        time.sleep(0.15)
 
     # Back Button
     st.markdown('<div class="back-btn-wrapper">', unsafe_allow_html=True)
