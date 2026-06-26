@@ -1004,65 +1004,7 @@ def show_dashboard():
         </svg>
     </div>
 </div>
-<script>
-var container = document.getElementById('tci-chart-container');
-if (container) {{
-    var isDown = false;
-    var startX;
-    var scrollLeft;
-    var dragMoved = false;
-    container.addEventListener('mousedown', function(e) {{
-        isDown = true;
-        dragMoved = false;
-        startX = e.pageX - container.offsetLeft;
-        scrollLeft = container.scrollLeft;
-    }});
-    container.addEventListener('mouseleave', function() {{
-        isDown = false;
-    }});
-    container.addEventListener('mouseup', function() {{
-        isDown = false;
-    }});
-    container.addEventListener('mousemove', function(e) {{
-        if (!isDown) return;
-        e.preventDefault();
-        var x = e.pageX - container.offsetLeft;
-        var walk = (x - startX) * 1.5;
-        if (Math.abs(x - startX) > 5) {{
-            dragMoved = true;
-        }}
-        container.scrollLeft = scrollLeft - walk;
-    }});
-    container.addEventListener('wheel', function(e) {{
-        if (e.deltaY !== 0) {{
-            e.preventDefault();
-            container.scrollLeft += e.deltaY * 1.2;
-        }}
-    }});
-    setTimeout(function() {{
-        var activeElement = container.querySelector('.chart-active-col');
-        if (activeElement) {{
-            var containerRect = container.getBoundingClientRect();
-            var activeRect = activeElement.getBoundingClientRect();
-            var elementLeft = activeRect.left - containerRect.left + container.scrollLeft;
-            var elementWidth = activeRect.width;
-            container.scrollLeft = elementLeft - (container.offsetWidth / 2) + (elementWidth / 2);
-        }}
-    }}, 150);
-}}
-window.selectDay = function(index) {{
-    if (typeof dragMoved !== 'undefined' && dragMoved) return;
-    var targetInput = document.querySelector('input[placeholder="day_index_input"]');
-    if (targetInput) {{
-        var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-        setter.call(targetInput, index);
-        targetInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-        targetInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-        targetInput.focus();
-        targetInput.blur();
-    }}
-}};
-</script>"""
+"""
     st.markdown(
         '<div class="section-sep"><div class="section-sep-line"></div>'
         '<div class="section-sep-label">Forecast Timeline</div>'
