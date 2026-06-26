@@ -42,19 +42,25 @@ def get_coords(location):
         "format": "json"
     }
 
-    response = requests.get(
-        url,
-        params=params,
-        headers={"User-Agent": "ClimateTourismPlanner"}
-    )
+    try:
+        response = requests.get(
+            url,
+            params=params,
+            headers={"User-Agent": "ClimateTourismPlanner/1.0 (contact@example.com)"},
+            timeout=10
+        )
+        if response.status_code != 200:
+            return False
 
-    data = response.json()
-    if not data:
+        data = response.json()
+        if not data:
+            return False
+
+        lat = data[0]["lat"]
+        long = data[0]["lon"]
+
+        return lat, long
+    except (requests.exceptions.RequestException, ValueError):
         return False
-
-    lat = data[0]["lat"]
-    long = data[0]["lon"]
-
-    return lat, long
 
 
