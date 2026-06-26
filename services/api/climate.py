@@ -63,7 +63,6 @@ def fetch_year_window(lat, long, year_offset):
     resp = requests.get(url, params=params, headers={"User-Agent": "ClimateTourismPlanner"})
     return resp.json()["daily"]
 
-@st.cache_data(show_spinner=False)
 def hist_climate(lat,long):
 
 

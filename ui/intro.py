@@ -1,5 +1,4 @@
 import streamlit as st
-import time
 
 
 def show_intro():
@@ -14,7 +13,7 @@ def show_intro():
     #  - div[data-testid="column"]:nth-of-type(2): glass-morphism card on middle col
     #  - .stTextInput / .stButton overrides for premium look
     
-    st.html(
+    st.markdown(
         """
         <style>
         /* ---------- RESET / BASE ---------- */
@@ -217,7 +216,8 @@ def show_intro():
             .headline   { font-size: 1.8rem; }
         }
         </style>
-        """
+        """,
+        unsafe_allow_html=True,
     )
 
     
@@ -250,8 +250,9 @@ def show_intro():
         for o in orbs
     )
 
-    st.html(
-        f'<div class="earth-bg">{leaf_divs}{orb_divs}</div>'
+    st.markdown(
+        f'<div class="earth-bg">{leaf_divs}{orb_divs}</div>',
+        unsafe_allow_html=True,
     )
 
     
@@ -260,13 +261,6 @@ def show_intro():
     # Columns [left_gutter, middle_content, right_gutter]
     # Ratio 1:1.5:1 keeps the card narrow on wide screens.
     
-    def navigate_to_dashboard():
-        dest = st.session_state.get("intro_dest", "").strip()
-        if dest:
-            st.session_state["destination"] = dest
-            st.session_state["current_page"] = "dashboard"
-            time.sleep(0.15)
-
     _, col_content, _ = st.columns([1, 1.5, 1])
 
     with col_content:
@@ -288,10 +282,13 @@ def show_intro():
         )
 
         # --- Submit button ---
-        st.button(
-            "🌿  Start Planning",
-            type="primary",
-            use_container_width=False,
-            on_click=navigate_to_dashboard,
-        )
+        submitted = st.button("🌿  Start Planning", type="primary", use_container_width=False)
 
+    
+    # SESSION-STATE ROUTING LOGIC
+    
+    if submitted:
+        if destination.strip():
+            st.session_state["destination"] = destination.strip()
+            st.session_state["current_page"] = "dashboard"
+            st.rerun()
