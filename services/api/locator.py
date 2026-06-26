@@ -48,13 +48,14 @@ def get_coords(location):
         headers={"User-Agent": "ClimateTourismPlanner"}
     )
 
-    data = response.json()
+    try:
+        data = response.json()
+    except ValueError:
+        return False
+
     if not data:
         return False
 
-    lat = data[0]["lat"]
-    long = data[0]["lon"]
-
-    return lat, long
+    return data[0]["lat"], data[0]["lon"]
 
 

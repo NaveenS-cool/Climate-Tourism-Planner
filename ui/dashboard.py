@@ -810,38 +810,10 @@ def show_dashboard():
     total_days = len(current["dates"])
     past_count = sum(1 for d in current["dates"] if d < today_str)
 
-    # Reset selection when destination changes by removing key to allow default initialization
-    if "last_destination" not in st.session_state or st.session_state["last_destination"] != destination:
-        st.session_state["last_destination"] = destination
-        if "day_index_input" in st.session_state:
-            del st.session_state["day_index_input"]
-
-    # Hidden text input to sync selection with Streamlit state
-    st.markdown("""
-    <style>
-    div[data-testid="stTextInput"] {
-        display: none !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    selected_idx_str = st.text_input(
-        "Hidden Day Index",
-        value=str(past_count),
-        key="day_index_input",
-        placeholder="day_index_input",
-        label_visibility="collapsed"
-    )
-
-    try:
-        selected_idx = int(selected_idx_str)
-        if selected_idx < 0 or selected_idx >= total_days:
-            selected_idx = past_count
-    except ValueError:
-        selected_idx = past_count
-
+        # Use the current day as the fixed view for the static chart
+    selected_idx = past_count
     selected_date = current["dates"][selected_idx]
-    selected_tci  = tci_scores[selected_idx]
+    selected_tci = tci_scores[selected_idx]
 
     # Generate points for the graph line & fill
     points = []
@@ -866,21 +838,12 @@ def show_dashboard():
 
     svg_elements = []
 
-    # 1. Grid Lines and Active Highlights
+    # 1. Grid lines
     for i, d in enumerate(current["dates"]):
         x = 35 + i * width_per_day
-        
-        # Grid line
         svg_elements.append(
             f'<line x1="{x}" y1="20" x2="{x}" y2="135" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 2" />'
         )
-        
-        # Active highlight background
-        if i == selected_idx:
-            svg_elements.append(
-                f'<rect class="chart-active-col" x="{x - 30}" y="10" width="60" height="160" rx="12" '
-                f'fill="rgba(82, 183, 136, 0.08)" stroke="rgba(82, 183, 136, 0.25)" stroke-width="1.5" />'
-            )
 
     # 2. Line/Area Paths
     svg_elements.append(
@@ -896,25 +859,17 @@ def show_dashboard():
         y = points[i][1]
         tci = tci_scores[i]
         q_color = get_tci_color(tci)
-        
+
         dt = datetime.strptime(d, "%Y-%m-%d")
         day_lbl = "Today" if d == today_str else dt.strftime("%d %b")
         anim_delay = 0.3 + i * 0.04
-        
+
         svg_elements.append(
             f'<g class="chart-node" style="animation-delay: {anim_delay:.2f}s;">'
             f'<circle cx="{x}" cy="{y}" r="4" fill="#ffffff" stroke="{q_color}" stroke-width="2" />'
             f'<text x="{x}" y="{y - 12}" class="chart-score-text" text-anchor="middle">{tci:.0f}</text>'
             f'<text x="{x}" y="145" class="chart-day-text" text-anchor="middle">{day_lbl}</text>'
             f'</g>'
-        )
-
-    # 4. Input Click Targets
-    for i in range(total_days):
-        x = 35 + i * width_per_day
-        svg_elements.append(
-            f'<rect x="{x - 35}" y="0" width="{width_per_day}" height="{chart_height}" '
-            f'fill="transparent" style="cursor:pointer;" onclick="selectDay({i})" />'
         )
 
     svg_content = "\n".join(svg_elements)
@@ -1005,65 +960,7 @@ def show_dashboard():
         </svg>
     </div>
 </div>
-<script>
-var container = document.getElementById('tci-chart-container');
-if (container) {{
-    var isDown = false;
-    var startX;
-    var scrollLeft;
-    var dragMoved = false;
-    container.addEventListener('mousedown', function(e) {{
-        isDown = true;
-        dragMoved = false;
-        startX = e.pageX - container.offsetLeft;
-        scrollLeft = container.scrollLeft;
-    }});
-    container.addEventListener('mouseleave', function() {{
-        isDown = false;
-    }});
-    container.addEventListener('mouseup', function() {{
-        isDown = false;
-    }});
-    container.addEventListener('mousemove', function(e) {{
-        if (!isDown) return;
-        e.preventDefault();
-        var x = e.pageX - container.offsetLeft;
-        var walk = (x - startX) * 1.5;
-        if (Math.abs(x - startX) > 5) {{
-            dragMoved = true;
-        }}
-        container.scrollLeft = scrollLeft - walk;
-    }});
-    container.addEventListener('wheel', function(e) {{
-        if (e.deltaY !== 0) {{
-            e.preventDefault();
-            container.scrollLeft += e.deltaY * 1.2;
-        }}
-    }});
-    setTimeout(function() {{
-        var activeElement = container.querySelector('.chart-active-col');
-        if (activeElement) {{
-            var containerRect = container.getBoundingClientRect();
-            var activeRect = activeElement.getBoundingClientRect();
-            var elementLeft = activeRect.left - containerRect.left + container.scrollLeft;
-            var elementWidth = activeRect.width;
-            container.scrollLeft = elementLeft - (container.offsetWidth / 2) + (elementWidth / 2);
-        }}
-    }}, 150);
-}}
-window.selectDay = function(index) {{
-    if (typeof dragMoved !== 'undefined' && dragMoved) return;
-    var targetInput = document.querySelector('input[placeholder="day_index_input"]');
-    if (targetInput) {{
-        var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-        setter.call(targetInput, index);
-        targetInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-        targetInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-        targetInput.focus();
-        targetInput.blur();
-    }}
-}};
-</script>"""
+"""
     st.markdown(
         '<div class="section-sep"><div class="section-sep-line"></div>'
         '<div class="section-sep-label">Forecast Timeline</div>'

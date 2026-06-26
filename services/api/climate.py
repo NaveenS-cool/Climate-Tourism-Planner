@@ -40,7 +40,7 @@ def get_climate(lat, long):
 
     return data["daily"],current
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def fetch_year_window(lat, long, year_offset):
 
     print("cache miss")
@@ -62,6 +62,7 @@ def fetch_year_window(lat, long, year_offset):
     }
     resp = requests.get(url, params=params, headers={"User-Agent": "ClimateTourismPlanner"})
     return resp.json()["daily"]
+
 
 def hist_climate(lat,long):
 
