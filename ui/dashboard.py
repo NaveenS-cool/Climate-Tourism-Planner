@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 from datetime import datetime
 from services.api.locator import get_coords
 from services.api.climate import get_climate, hist_climate
@@ -912,7 +913,7 @@ def show_dashboard():
         x = 35 + i * width_per_day
         svg_elements.append(
             f'<rect x="{x - 35}" y="0" width="{width_per_day}" height="{chart_height}" '
-            f'fill="transparent" style="cursor:pointer;" />'
+            f'fill="transparent" style="cursor:pointer;" onclick="selectDay({i})" />'
         )
 
     svg_content = "\n".join(svg_elements)
@@ -1277,7 +1278,7 @@ def show_dashboard():
 
     def navigate_to_intro():
         st.session_state["current_page"] = "intro"
-        st.rerun()
+        time.sleep(0.15)
 
     # Back Button
     st.markdown('<div class="back-btn-wrapper">', unsafe_allow_html=True)
