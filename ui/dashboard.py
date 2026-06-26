@@ -811,34 +811,7 @@ def show_dashboard():
     total_days = len(current["dates"])
     past_count = sum(1 for d in current["dates"] if d < today_str)
 
-    # Reset selection when destination changes using dynamic widget key (cleaner Streamlit pattern)
-    if "last_destination" not in st.session_state or st.session_state["last_destination"] != destination:
-        st.session_state["last_destination"] = destination
-
-    # Hidden text input to sync selection with Streamlit state
-    st.markdown("""
-    <style>
-    div[data-testid="stTextInput"] {
-        display: none !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    selected_idx_str = st.text_input(
-        "Hidden Day Index",
-        value=str(past_count),
-        key=f"day_index_input_{destination}",
-        placeholder="day_index_input",
-        label_visibility="collapsed"
-    )
-
-    try:
-        selected_idx = int(selected_idx_str)
-        if selected_idx < 0 or selected_idx >= total_days:
-            selected_idx = past_count
-    except ValueError:
-        selected_idx = past_count
-
+    selected_idx = past_count
     selected_date = current["dates"][selected_idx]
     selected_tci  = tci_scores[selected_idx]
 
@@ -865,7 +838,7 @@ def show_dashboard():
 
     svg_elements = []
 
-    # 1. Grid Lines and Active Highlights
+    # 1. Grid Lines
     for i, d in enumerate(current["dates"]):
         x = 35 + i * width_per_day
         
@@ -873,13 +846,6 @@ def show_dashboard():
         svg_elements.append(
             f'<line x1="{x}" y1="20" x2="{x}" y2="135" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 2" />'
         )
-        
-        # Active highlight background
-        if i == selected_idx:
-            svg_elements.append(
-                f'<rect class="chart-active-col" x="{x - 30}" y="10" width="60" height="160" rx="12" '
-                f'fill="rgba(82, 183, 136, 0.08)" stroke="rgba(82, 183, 136, 0.25)" stroke-width="1.5" />'
-            )
 
     # 2. Line/Area Paths
     svg_elements.append(
@@ -908,14 +874,6 @@ def show_dashboard():
             f'</g>'
         )
 
-    # 4. Input Click Targets
-    for i in range(total_days):
-        x = 35 + i * width_per_day
-        svg_elements.append(
-            f'<rect x="{x - 35}" y="0" width="{width_per_day}" height="{chart_height}" '
-            f'fill="transparent" style="cursor:pointer;" onclick="selectDay({i})" />'
-        )
-
     svg_content = "\n".join(svg_elements)
     graph_html = f"""<style>
 .tci-chart-wrapper {{
@@ -934,16 +892,12 @@ def show_dashboard():
     padding: 1.2rem 0;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    cursor: grab;
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
 }}
 .tci-chart-container::-webkit-scrollbar {{
     display: none;
-}}
-.tci-chart-container:active {{
-    cursor: grabbing;
 }}
 .tci-chart-container svg {{
     width: 100%;
