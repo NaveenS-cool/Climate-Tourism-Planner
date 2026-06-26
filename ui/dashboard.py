@@ -810,11 +810,9 @@ def show_dashboard():
     total_days = len(current["dates"])
     past_count = sum(1 for d in current["dates"] if d < today_str)
 
-    # Reset selection when destination changes by removing key to allow default initialization
+    # Reset selection when destination changes using dynamic widget key (cleaner Streamlit pattern)
     if "last_destination" not in st.session_state or st.session_state["last_destination"] != destination:
         st.session_state["last_destination"] = destination
-        if "day_index_input" in st.session_state:
-            del st.session_state["day_index_input"]
 
     # Hidden text input to sync selection with Streamlit state
     st.markdown("""
@@ -828,7 +826,7 @@ def show_dashboard():
     selected_idx_str = st.text_input(
         "Hidden Day Index",
         value=str(past_count),
-        key="day_index_input",
+        key=f"day_index_input_{destination}",
         placeholder="day_index_input",
         label_visibility="collapsed"
     )
