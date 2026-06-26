@@ -996,7 +996,7 @@ def show_dashboard():
 </style>
 <div class="tci-chart-wrapper">
     <div id="tci-chart-container" class="tci-chart-container">
-        <svg viewBox="0 0 {total_width} {chart_height}" width="100%" height="auto" style="display:block;">
+        <svg viewBox="0 0 {total_width} {chart_height}" width="100%" height="100%" style="display:block;">
             <defs>
                 <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stop-color="#00ffa3" />
@@ -1172,7 +1172,7 @@ window.selectDay = function(index) {{
     <div class="score-panel">
         <div class="panel-eyebrow">Climate Comfort Index</div>
         <div class="gauge-wrap">
-            <svg viewBox="0 0 220 145" width="100%" height="auto" style="max-width:340px;">
+            <svg viewBox="0 0 220 145" width="100%" height="100%" style="max-width:340px;">
                 <defs>
                     <!-- Vivid contrasting gradient, always visible on dark bg -->
                     <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
