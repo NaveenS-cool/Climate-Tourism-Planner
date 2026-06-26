@@ -1333,11 +1333,12 @@ window.selectDay = function(index) {{
     )
     st.markdown(recs_panel_html, unsafe_allow_html=True)
 
+    def navigate_to_intro():
+        st.session_state["current_page"] = "intro"
+
     # Back Button
     st.markdown('<div class="back-btn-wrapper">', unsafe_allow_html=True)
-    if st.button("← Back"):
-        st.session_state["current_page"] = "intro"
-        st.rerun()
+    st.button("← Back", on_click=navigate_to_intro)
     st.markdown("</div>", unsafe_allow_html=True)
 
 

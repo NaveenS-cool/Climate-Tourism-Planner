@@ -261,6 +261,12 @@ def show_intro():
     # Columns [left_gutter, middle_content, right_gutter]
     # Ratio 1:1.5:1 keeps the card narrow on wide screens.
     
+    def navigate_to_dashboard():
+        dest = st.session_state.get("intro_dest", "").strip()
+        if dest:
+            st.session_state["destination"] = dest
+            st.session_state["current_page"] = "dashboard"
+
     _, col_content, _ = st.columns([1, 1.5, 1])
 
     with col_content:
@@ -282,13 +288,10 @@ def show_intro():
         )
 
         # --- Submit button ---
-        submitted = st.button("🌿  Start Planning", type="primary", use_container_width=False)
+        st.button(
+            "🌿  Start Planning",
+            type="primary",
+            use_container_width=False,
+            on_click=navigate_to_dashboard,
+        )
 
-    
-    # SESSION-STATE ROUTING LOGIC
-    
-    if submitted:
-        if destination.strip():
-            st.session_state["destination"] = destination.strip()
-            st.session_state["current_page"] = "dashboard"
-            st.rerun()
