@@ -25,7 +25,9 @@ st.set_page_config(
 # ROUTER
 
 if st.session_state["current_page"] == "intro":
-    show_intro()
+    with st.container(key="intro_container"):
+        show_intro()
 
 elif st.session_state["current_page"] == "dashboard":
-    show_dashboard()
+    with st.container(key="dashboard_container"):
+        show_dashboard()
