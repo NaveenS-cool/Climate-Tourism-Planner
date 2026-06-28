@@ -5,12 +5,11 @@ URL : [Click here](https://climate-tourism-planner-st.streamlit.app/)
 
 ## Features
 
-- Search destinations across Kerala
+- Search destinations across the world
 - Automatic geocoding using Nominatim
-- Real-time weather analysis
-- Historical climate analysis using a 5-year seasonal window
-- Tourism Climate Index (TCI) calculation
-- Climate anomaly detection using Z-score analysis
+- Scientific real-time weather analysis using historic, current and forecasted data
+- Tourism Comfortability Index (TCI) calculation
+- Anomaly detection using Z-score analysis
 - AI-powered travel recommendations using Groq Llama
 - Clean and responsive Streamlit interface
 
